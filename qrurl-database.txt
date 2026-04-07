@@ -1,0 +1,5 @@
+inernal  url postgresql://qr_db_rqcm_user:2Z7ByVxasUMQPMB2TBwNvXNvEb7zdnb0@dpg-d7alig0ule4c73fs0ku0-a/qr_db_rqcm
+
+external url: postgresql://qr_db_rqcm_user:2Z7ByVxasUMQPMB2TBwNvXNvEb7zdnb0@dpg-d7alig0ule4c73fs0ku0-a.ohio-postgres.render.com/qr_db_rqcm
+
+psql command: PGPASSWORD=2Z7ByVxasUMQPMB2TBwNvXNvEb7zdnb0 psql -h dpg-d7alig0ule4c73fs0ku0-a.ohio-postgres.render.com -U qr_db_rqcm_user qr_db_rqcm

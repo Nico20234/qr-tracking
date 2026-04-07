@@ -2,16 +2,17 @@ from flask import Flask, request, redirect, render_template
 import psycopg2
 import datetime
 import requests
+import os
 
 app = Flask(__name__)
 
-# 🔌 Conexión a PostgreSQL
-conn = psycopg2.connect(
-    host="localhost",
-    database="qr_tracking",
-    user="postgres",
-    password="nico2023"
-)
+# 🔌 Conexión a PostgreSQL (Render)
+database_url = os.environ.get("DATABASE_URL")
+
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+conn = psycopg2.connect(database_url)
 
 def obtener_ubicacion(ip):
     try:
@@ -56,13 +57,10 @@ def qr():
 
     return redirect("https://instagram.com/mediodiaresuelto")
 
-@app.route('/landing')
-def landing():
-    return render_template("landing.html")
-
-@app.route('/ir-instagram')
-def ir_instagram():
-    return redirect("https://instagram.com/mediodiaresuelto")
+@app.route('/')
+def home():
+    return redirect('/qr')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
