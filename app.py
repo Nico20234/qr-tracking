@@ -5,25 +5,17 @@ import datetime
 
 app = Flask(__name__)
 
-# =========================
-# Config DB
-# =========================
 database_url = os.environ.get("DATABASE_URL")
 
 if not database_url:
-    raise ValueError("No se encontró DATABASE_URL en las variables de entorno")
+    raise ValueError("No se encontró DATABASE_URL")
 
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-
 def get_connection():
     return psycopg2.connect(database_url)
 
-
-# =========================
-# Endpoint principal para tracking
-# =========================
 @app.route('/track', methods=['POST'])
 def track():
     data = request.get_json(silent=True) or {}
@@ -36,9 +28,13 @@ def track():
     lat = data.get("lat")
     lon = data.get("lon")
 
-    # Si el worker no manda fecha, usamos la del servidor
-    fecha = data.get("fecha")
-    if not fecha:
+    fecha_str = data.get("fecha")
+    if fecha_str:
+        try:
+            fecha = datetime.datetime.fromisoformat(fecha_str.replace("Z", "+00:00"))
+        except Exception:
+            fecha = datetime.datetime.utcnow()
+    else:
         fecha = datetime.datetime.utcnow()
 
     conn = None
@@ -64,26 +60,12 @@ def track():
 
         conn.commit()
 
-        return jsonify({
-            "status": "ok",
-            "guardado": {
-                "ip": ip,
-                "user_agent": user_agent,
-                "city": city,
-                "region": region,
-                "country": country,
-                "lat": lat,
-                "lon": lon
-            }
-        }), 200
+        return jsonify({"status": "ok"}), 200
 
     except Exception as e:
         if conn:
             conn.rollback()
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
     finally:
         if cursor:
@@ -91,25 +73,13 @@ def track():
         if conn:
             conn.close()
 
+@app.route('/')
+def home():
+    return jsonify({"status": "running"}), 200
 
-# =========================
-# Endpoint opcional de prueba
-# =========================
 @app.route('/qr')
 def qr():
     return redirect("https://instagram.com/mediodiaresuelto", code=302)
-
-
-# =========================
-# Health check
-# =========================
-@app.route('/')
-def home():
-    return jsonify({
-        "status": "running",
-        "message": "Backend de tracking activo"
-    })
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
