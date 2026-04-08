@@ -3,6 +3,39 @@ import psycopg2
 import datetime
 import requests
 import os
+from flask import jsonify
+
+app = Flask(__name__)
+
+@app.route('/track', methods=['POST'])
+def track():
+    data = request.get_json()
+
+    ip = data.get("ip")
+    country = data.get("country")
+    city = data.get("city")
+
+    fecha = datetime.datetime.now()
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO scans (ip, user_agent, fecha, ciudad, region, pais, lat, lon)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        ip,
+        "worker",
+        fecha,
+        city,
+        None,
+        country,
+        None,
+        None
+    ))
+
+    conn.commit()
+
+    return jsonify({"status": "ok"})
 
 app = Flask(__name__)
 
